@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moscow real estate: price per sqm in USD vs USD/RUB (2014-2026)</title>
+<style>
+  :root{--navy:#051C2C;--teal:#00A9CE;--ink:#1d2730;--muted:#5f6b75;--line:#e5e8eb;--bg:#ffffff;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:#f4f6f8;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.6;}
+  .wrap{max-width:920px;margin:0 auto;padding:32px 20px 56px;}
+  .card{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:28px 28px 24px;}
+  h1{font-size:24px;font-weight:600;margin:0 0 4px;color:var(--navy);}
+  .sub{font-size:14px;color:var(--muted);margin:0 0 22px;}
+  .legend{display:flex;flex-wrap:wrap;gap:18px;margin:0 0 12px;font-size:13px;color:var(--muted);}
+  .legend span{display:flex;align-items:center;gap:6px;}
+  .sw{width:16px;height:3px;display:inline-block;border-radius:2px;}
+  .chartbox{position:relative;width:100%;height:380px;}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:22px;}
+  .stat{background:#f7f9fa;border-radius:10px;padding:14px 16px;}
+  .stat .lbl{font-size:12px;color:var(--muted);margin-bottom:4px;}
+  .stat .val{font-size:22px;font-weight:600;color:var(--navy);}
+  .stat .note{font-size:11px;color:#9aa4ad;margin-top:2px;}
+  .takeaway{font-size:14px;color:var(--ink);margin:24px 0 0;}
+  .sources{font-size:12px;color:var(--muted);margin-top:18px;border-top:1px solid var(--line);padding-top:14px;}
+  .sources a{color:var(--teal);text-decoration:none;}
+  .foot{font-size:11px;color:#9aa4ad;margin-top:18px;text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>Moscow real estate price per m&sup2;, in US dollars</h1>
+    <p class="sub">Residential and class A offices vs the USD/RUB exchange rate, 2014-2026</p>
+
+    <div class="legend">
+      <span><span class="sw" style="background:#185FA5;"></span>Residential /m&sup2;</span>
+      <span><span class="sw" style="background:#D85A30;"></span>Offices, class A /m&sup2; (indicative)</span>
+      <span><span class="sw" style="background:#5F5E5A;border-top:0;height:0;border-top:3px dashed #5F5E5A;"></span>USD/RUB rate (right axis)</span>
+    </div>
+
+    <div class="chartbox">
+      <canvas id="c" role="img" aria-label="Moscow price per square meter in US dollars for residential and class A offices versus the USD to RUB exchange rate, 2014 to 2026"></canvas>
+    </div>
+
+    <div class="cards" id="cards"></div>
+
+    <p class="takeaway">In ruble terms Moscow housing kept rising, but priced in dollars it nearly halved after the 2014 devaluation and has only partly recovered as the ruble strengthened back toward 77. The currency move, not the local market, drove the dollar price. Offices have outrun housing since 2022 on a squeeze in quality supply.</p>
+
+    <div class="sources">
+      Sources: residential = <a href="https://www.irn.ru/gd/" target="_blank" rel="noopener">IRN.RU Moscow secondary index</a> (ex-elite); USD/RUB = annual weighted averages, <a href="https://www.audit-it.ru/currency/sr_vz.php" target="_blank" rel="noopener">audit-it.ru / CBR</a>; office line indicative, modelled from Knight Frank / NF Group market commentary. Dollar prices = ruble price &divide; annual average USD/RUB.
+    </div>
+    <div class="foot">Palm &amp; Peak &middot; prepared June 2026</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const years=[2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025,2026];
+const resRUB=[175,187,172,167,171,179,193,242,264,273,272.5,285.8,295];
+const offRUB=[230,205,195,200,210,220,225,255,285,330,380,420,440];
+const fx=[38.4,61.3,67.0,58.3,62.7,64.7,72.3,73.7,68.5,85.2,92.4,83.6,76.7];
+const resUSD=resRUB.map((v,i)=>Math.round(v*1000/fx[i]));
+const offUSD=offRUB.map((v,i)=>Math.round(v*1000/fx[i]));
+
+new Chart(document.getElementById('c'),{
+ data:{labels:years,datasets:[
+  {type:'line',label:'Residential',data:resUSD,yAxisID:'y',borderColor:'#185FA5',backgroundColor:'#185FA5',borderWidth:2.5,pointRadius:3,pointStyle:'circle',tension:.25,order:1},
+  {type:'line',label:'Offices, class A',data:offUSD,yAxisID:'y',borderColor:'#D85A30',backgroundColor:'#D85A30',borderWidth:2.5,pointRadius:3,pointStyle:'rect',tension:.25,order:2},
+  {type:'line',label:'USD/RUB',data:fx,yAxisID:'y1',borderColor:'#5F5E5A',backgroundColor:'#5F5E5A',borderWidth:2,borderDash:[6,4],pointRadius:2,pointStyle:'triangle',tension:.25,order:3}
+ ]},
+ options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+  plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{
+    if(c.dataset.label==='USD/RUB')return ' USD/RUB: '+c.raw.toFixed(1);
+    return ' '+c.dataset.label+': $'+c.raw.toLocaleString('en-US');}}}},
+  scales:{
+   y:{position:'left',title:{display:true,text:'USD per m²'},ticks:{callback:v=>'$'+(v/1000)+'k'}},
+   y1:{position:'right',title:{display:true,text:'USD/RUB'},grid:{drawOnChartArea:false},min:0},
+   x:{ticks:{autoSkip:false,maxRotation:0}}
+  }}
+});
+
+const dn=(a)=>Math.round((a[a.length-1]/a[0]-1)*100);
+const cards=[
+ ['Residential, 2026','$'+resUSD[resUSD.length-1].toLocaleString('en-US'),(dn(resUSD)>=0?'+':'')+dn(resUSD)+'% vs 2014'],
+ ['Offices, 2026','$'+offUSD[offUSD.length-1].toLocaleString('en-US'),(dn(offUSD)>=0?'+':'')+dn(offUSD)+'% vs 2014'],
+ ['Residential trough','$'+Math.min(...resUSD).toLocaleString('en-US'),'2016 / 2020 low'],
+ ['Ruble vs USD','-'+Math.round((1-fx[0]/fx[fx.length-1])*100)+'%','weaker since 2014']
+];
+document.getElementById('cards').innerHTML=cards.map(x=>
+ '<div class="stat"><div class="lbl">'+x[0]+'</div><div class="val">'+x[1]+'</div><div class="note">'+x[2]+'</div></div>').join('');
+</script>
+</body>
+</html>
